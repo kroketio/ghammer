@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=gHammer
+GenericName=Level Editor
+Comment=Level editor for Godot
+Exec=ghammer_client %f
+Icon=io.kroket.ghammer
+Terminal=false
+Categories=Graphics;3DGraphics;
+Keywords=level;map;editor;godot;

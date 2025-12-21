@@ -1,0 +1,12 @@
+[Unit]
+Description=Persistent ghammer server service
+After=network.target
+
+[Service]
+User=ghammer
+Restart=on-failure
+RestartSec=20
+ExecStart=/path/to/ghammer_server
+
+[Install]
+WantedBy=multi-user.target

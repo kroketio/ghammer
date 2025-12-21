@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/material_defaults.json</file>
+    </qresource>
+</RCC>

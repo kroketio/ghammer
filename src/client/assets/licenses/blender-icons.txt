@@ -1,0 +1,10 @@
+Blender interface icons
+
+Title:   Blender icon set (blender_icons.svg)
+Author:  Blender Foundation and the Blender icon designers
+Source:  https://www.blender.org (Blender source repository, release/datafiles)
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+         https://creativecommons.org/licenses/by-sa/4.0/
+
+Changes: the icons are used as separate image files taken from the icon set.
+The icons, as used in gHammer, are shared under the same license.

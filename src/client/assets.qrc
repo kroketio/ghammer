@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/icon.png</file>
+        <file>assets/grid.png</file>
+        <file>assets/environment_adjustments_3d_lut_template.png</file>
+        <file>assets/measurewall01_Color.jpg</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,330 @@
+{
+  "version": 1,
+  "comment": "Layer 1 of the material property stack: defaults from a texture's tags and name words. Rules matched by the texture's tags come first, then rules matched by its name words; within each pass rules are tried in order and for every key the first rule that sets it wins. Map-aware values (roughness / metallic 1.0 when a roughness / metal map exists) only fill keys no rule set; ARM channels, emission and alpha are applied in code. Values seeded from the old .tres templates.",
+  "rules": [
+    {
+      "name": "glass",
+      "match": [
+        "glass",
+        "window",
+        "windows"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.1,
+        "metallic_specular": 0.5,
+        "normal_scale": 0.3
+      }
+    },
+    {
+      "name": "leaves",
+      "match": [
+        "leaves",
+        "leaf",
+        "leafs",
+        "foliage",
+        "ivy",
+        "hedge"
+      ],
+      "props": {
+        "roughness": 0.9,
+        "metallic_specular": 0.0,
+        "normal_scale": 0.6,
+        "ao_light_affect": 0.6
+      }
+    },
+    {
+      "name": "rusty metal",
+      "match": [
+        "rust",
+        "rusty",
+        "corroded",
+        "corrosion"
+      ],
+      "props": {
+        "metallic": 0.4,
+        "roughness": 0.85,
+        "metallic_specular": 0.3,
+        "normal_scale": 0.6,
+        "ao_light_affect": 0.8
+      }
+    },
+    {
+      "name": "painted metal",
+      "match": [
+        "painted"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.6,
+        "metallic_specular": 0.4,
+        "normal_scale": 0.5
+      }
+    },
+    {
+      "name": "metal",
+      "match": [
+        "metal",
+        "metallic",
+        "steel",
+        "iron",
+        "chrome",
+        "aluminium",
+        "aluminum",
+        "copper",
+        "brass",
+        "bronze",
+        "gold",
+        "silver",
+        "tin",
+        "zinc",
+        "galvanized"
+      ],
+      "props": {
+        "metallic": 1.0,
+        "metallic_specular": 0.5,
+        "roughness": 0.45,
+        "normal_scale": 0.5,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "tiles",
+      "match": [
+        "tile",
+        "tiles",
+        "ceramic",
+        "porcelain",
+        "mosaic",
+        "glazed"
+      ],
+      "props": {
+        "metallic": 0.2,
+        "roughness": 0.4,
+        "metallic_specular": 0.4,
+        "normal_scale": 0.4,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "marble",
+      "match": [
+        "marble",
+        "granite",
+        "terrazzo",
+        "polished"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.35,
+        "metallic_specular": 0.5,
+        "normal_scale": 0.8
+      }
+    },
+    {
+      "name": "plastic",
+      "match": [
+        "plastic",
+        "rubber",
+        "vinyl",
+        "linoleum",
+        "epoxy"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.5,
+        "metallic_specular": 0.5,
+        "normal_scale": 0.4
+      }
+    },
+    {
+      "name": "paint",
+      "match": [
+        "paint",
+        "painting",
+        "lacquer",
+        "varnish",
+        "varnished"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.4,
+        "metallic_specular": 0.26,
+        "normal_scale": 0.6
+      }
+    },
+    {
+      "name": "cobblestone",
+      "match": [
+        "cobblestone",
+        "cobble",
+        "cobbles",
+        "pavers",
+        "paving"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.75,
+        "metallic_specular": 0.3,
+        "normal_scale": 0.5,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "brick",
+      "match": [
+        "brick",
+        "bricks",
+        "brickwall"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.7,
+        "metallic_specular": 0.06,
+        "normal_scale": 0.8,
+        "ao_light_affect": 0.9
+      }
+    },
+    {
+      "name": "plaster",
+      "match": [
+        "plaster",
+        "stucco",
+        "drywall",
+        "render"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.94,
+        "metallic_specular": 0.0,
+        "normal_scale": 0.8,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "concrete",
+      "match": [
+        "concrete",
+        "cement",
+        "asphalt",
+        "road",
+        "pavement",
+        "gravel"
+      ],
+      "props": {
+        "metallic": 0.2,
+        "roughness": 0.65,
+        "metallic_specular": 0.3,
+        "normal_scale": 0.6,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "paper",
+      "match": [
+        "paper",
+        "cardboard"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.86,
+        "metallic_specular": 0.1,
+        "normal_scale": 0.6,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "stone",
+      "match": [
+        "stone",
+        "rock",
+        "rocks",
+        "cliff",
+        "slate",
+        "sandstone",
+        "limestone",
+        "boulder"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.91,
+        "metallic_specular": 0.1,
+        "normal_scale": 0.4,
+        "ao_light_affect": 1.0
+      }
+    },
+    {
+      "name": "wood",
+      "match": [
+        "wood",
+        "wooden",
+        "planks",
+        "plank",
+        "oak",
+        "walnut",
+        "pine",
+        "bark",
+        "timber",
+        "plywood",
+        "parquet"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.85,
+        "metallic_specular": 0.1,
+        "normal_scale": 0.4,
+        "ao_light_affect": 0.9
+      }
+    },
+    {
+      "name": "fabric",
+      "match": [
+        "fabric",
+        "cloth",
+        "clothes",
+        "carpet",
+        "textile",
+        "leather",
+        "wool",
+        "sofa",
+        "denim",
+        "canvas"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 1.0,
+        "metallic_specular": 0.05,
+        "normal_scale": 0.75
+      }
+    },
+    {
+      "name": "ground",
+      "match": [
+        "grass",
+        "ground",
+        "dirt",
+        "soil",
+        "mud",
+        "sand",
+        "beach",
+        "terrain",
+        "field",
+        "forest",
+        "moss",
+        "snow"
+      ],
+      "props": {
+        "metallic": 0.0,
+        "roughness": 0.9,
+        "metallic_specular": 0.0,
+        "normal_scale": 0.4,
+        "ao_light_affect": 0.6
+      }
+    }
+  ],
+  "fallback": {
+    "props": {
+      "normal_scale": 0.6
+    }
+  }
+}
