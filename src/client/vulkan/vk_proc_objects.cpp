@@ -350,6 +350,32 @@ bool Engine3D::rebuildProc(const quint32 id, QJsonObject params, const QString &
         partMaterial[part] = byName[name];
       }
   }
+  // Faces that match no old plane (a resize moved them): the biggest old face facing the same way, else the
+  // material most used on the old brushes.
+  eng::MaterialPtr majority;
+  {
+    std::map<QString, int> votes;
+    int best = 0;
+    for (const OldFace &of: oldFaces)
+      if (of.material && ++votes[of.material->name] > best) {
+        best = votes[of.material->name];
+        majority = of.material;
+      }
+  }
+  const auto sameFacing = [&oldFaces](const glm::dvec3 &n) -> const OldFace * {
+    const OldFace *found = nullptr;
+    double bestSize = -1.0;
+    for (const OldFace &of: oldFaces) {
+      if (!of.material || glm::dot(of.normal, n) < 0.999)
+        continue;
+      const double size = glm::length(of.mx - of.mn);
+      if (size > bestSize) {
+        bestSize = size;
+        found = &of;
+      }
+    }
+    return found;
+  };
   for (auto &b: brushes)
     for (size_t i = 0; i < b.faces.size() && i < b.polygons.size(); ++i) {
       eng::BrushFace &f = b.faces[i];
@@ -378,6 +404,13 @@ bool Engine3D::rebuildProc(const quint32 id, QJsonObject params, const QString &
       } else if (const auto it = partMaterial.find(part); it != partMaterial.end() && it->second) {
         f.material = it->second;
         const double w = it->second->texWidth > 0 ? it->second->texWidth : 512.0;
+        f.basis = eng::paraxialBasis(f.normal, kSourceUnitsPerWorldUnit / (w * prefs::d("Brush/DefaultTextureScale")));
+      } else if (const OldFace *facing = sameFacing(f.normal)) {
+        f.material = facing->material;
+        f.basis = facing->basis;
+      } else if (majority) {
+        f.material = majority;
+        const double w = majority->texWidth > 0 ? majority->texWidth : 512.0;
         f.basis = eng::paraxialBasis(f.normal, kSourceUnitsPerWorldUnit / (w * prefs::d("Brush/DefaultTextureScale")));
       }
     }
