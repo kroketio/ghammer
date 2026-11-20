@@ -30,7 +30,22 @@ struct AvailablePack {
 };
 
 const QList<AvailablePack> &availablePacks() {
-  static const QList<AvailablePack> packs = {};
+  static const QList<AvailablePack> packs = {
+      {QStringLiteral("sharetextures_1k"), QStringLiteral("CC0 textures from ShareTextures"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/sharetextures_1k.zip"), QStringLiteral("kroketio")},
+      {QStringLiteral("blenderkit_1k"), QStringLiteral("CC0 textures from BlenderKit"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/blenderkit_1k.zip"), QStringLiteral("kroketio")},
+      {QStringLiteral("cgambient_1k"), QStringLiteral("CC0 textures from ambientCG"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/cgambient_1k.zip"), QStringLiteral("kroketio")},
+      {QStringLiteral("cgbookcase_1k"), QStringLiteral("CC0 textures from cgbookcase"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/cgbookcase_1k.zip"), QStringLiteral("kroketio")},
+      {QStringLiteral("polyhaven_1k"), QStringLiteral("CC0 textures from Poly Haven"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/polyhaven_1k.zip"), QStringLiteral("kroketio")},
+      {QStringLiteral("sourceskyboxes"), QStringLiteral("CC BY 4.0 skyboxes from sourceskyboxes.com"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/sourceskyboxes.zip"), QStringLiteral("kroketio")},
+      {QStringLiteral("ghammer_luts"), QStringLiteral("Colour LUTs"),
+       QStringLiteral("https://github.com/kroketio/ghammer/releases/download/0.0.1/ghammer_luts.zip"), QStringLiteral("kroketio")},
+  };
   return packs;
 }
 
