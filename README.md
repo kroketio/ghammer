@@ -65,7 +65,7 @@ sudo apt install -y libpng pkg-config cmake qt6-base-dev qt6-websockets-dev unzi
 git clone https://github.com/kroketio/ghammer.git
 cmake -Bbuild .
 make -Cbuild -j8
-sudo make -Cbuild -j8
+sudo make -Cbuild -j8 install
 ```
 
 If you have a custom path to Qt, use `-DCMAKE_PREFIX_PATH=/path/to/qt/6.9.3/gcc_64`
@@ -152,7 +152,7 @@ It will use `~/.config/ghammer/` as data path.
 ## Contributing
 
 Large, AI generated merge requests are annoying to review, however if the 
-addition follow existing UI/UX paradigms, is stable/robust, and is useful, we will merge it.
+addition follow existing UI/UX patterns, is stable/robust, and is useful, we will merge it.
 
 # License
 
