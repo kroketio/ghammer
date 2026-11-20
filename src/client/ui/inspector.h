@@ -49,6 +49,8 @@ private:
   void buildHeader();
   void buildTransform();
   void buildTexture();
+  void buildNewBrush();
+  void refreshNewBrush();
   void buildWorld();
   void scheduleRefresh();
   void refresh();
@@ -75,6 +77,11 @@ private:
 
   // texture
   Section *m_texture = nullptr;
+  Section *m_newBrush = nullptr;
+  QLabel *m_newBrushThumb = nullptr;
+  QLabel *m_newBrushName = nullptr;
+  QToolButton *m_newBrushReset = nullptr;
+  QString m_newBrushThumbFor;
   Section *m_texProps = nullptr;
   MaterialPropsPanel *m_texPropsPanel = nullptr;
   QScrollArea *m_scroll = nullptr;
@@ -87,6 +94,7 @@ private:
   NumberField *m_rot = nullptr;
   ResetDot *m_dotScaleU = nullptr, *m_dotScaleV = nullptr, *m_dotOffU = nullptr, *m_dotOffV = nullptr,
            *m_dotRot = nullptr;
+  QToolButton *m_resetScale = nullptr;
   QCheckBox *m_texLock = nullptr;
   QCheckBox *m_scaleLock = nullptr;
 

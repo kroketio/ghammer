@@ -46,6 +46,9 @@ LocalLibraryModel::LocalLibraryModel(QObject *parent) : QAbstractListModel(paren
 void LocalLibraryModel::rebuild() {
   beginResetModel();
   m_items.clear();
+  // The editor's own dev texture (new brushes' default): not a file in the library.
+  m_items.push_back({QString::fromLatin1(vk::Engine3D::kDefaultBrushMaterial), QStringLiteral("dev_measurewall01d"),
+                     tr("Built-in"), QStringLiteral(":/assets/measurewall01_Color.jpg"), QSize(512, 512)});
   for (const auto &e: eng::TextureLibrary::instance().entries())
     m_items.push_back({e.name, e.display, e.category.isEmpty() ? tr("(root)") : e.category, e.albedo, e.size});
   endResetModel();

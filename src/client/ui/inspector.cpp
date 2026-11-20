@@ -109,6 +109,7 @@ Inspector::Inspector(vk::Engine3D *engine, QWidget *parent) : QWidget(parent), m
   buildHeader();
   buildTransform();
   buildTexture();
+  buildNewBrush();
   m_entity = new Section(tr("Entity"), QStringLiteral("empty_data"), m_body);
   m_entityEditor = new EntityEditor(m_engine, m_entity);
   m_entity->body()->addWidget(m_entityEditor);
@@ -186,8 +187,9 @@ Inspector::Inspector(vk::Engine3D *engine, QWidget *parent) : QWidget(parent), m
                     &vk::Engine3D::materialOverridesChanged, &vk::Engine3D::modHostsChanged,
                     &vk::Engine3D::editSourceChanged, &vk::Engine3D::pathsChanged, &vk::Engine3D::skyChanged,
                     &vk::Engine3D::physicsChanged, &vk::Engine3D::physicsSimChanged,
-                    &vk::Engine3D::bevelChanged})
+                    &vk::Engine3D::bevelChanged, &vk::Engine3D::marqueeChanged})
       connect(m_engine, sig, this, &Inspector::scheduleRefresh);
+    connect(m_engine, &vk::Engine3D::currentMaterialChanged, this, &Inspector::scheduleRefresh);
   }
   refresh();
 }
@@ -218,6 +220,7 @@ void Inspector::arrangeSections(const bool materialMode, const bool hasModifiers
   placeBefore(m_stairs, first);
   placeBefore(m_arch, m_stairs);
   placeBefore(m_shape, m_arch);
+  placeBefore(m_newBrush, m_shape);
 }
 
 void Inspector::scheduleRefresh() {
@@ -380,6 +383,8 @@ void Inspector::buildTexture() {
       m_lastThumbFor.clear();
       scheduleRefresh();
     }
+    if (m_newBrush && m_newBrush->isVisible() && m_newBrushThumb->pixmap().isNull())
+      scheduleRefresh();
   });
   mb->addStretch(1);
   mv->addWidget(m_matName);
@@ -422,8 +427,14 @@ void Inspector::buildTexture() {
     h->addWidget(db);
     return w;
   };
-  m_texture->addRow(tr("Tile size"), pair(m_scaleU, m_dotScaleU, m_scaleV, m_dotScaleV, 16.0, 2, QString()),
-                    tr("Source units covered by one repeat of the texture"));
+  {
+    QWidget *tile = pair(m_scaleU, m_dotScaleU, m_scaleV, m_dotScaleV, 16.0, 2, QString());
+    m_resetScale = smallButton(QStringLiteral("loop_back"), tr("Reset U and V to the texture's default tile size"), tile);
+    m_resetScale->setAutoRaise(true);
+    static_cast<QHBoxLayout *>(tile->layout())->addWidget(m_resetScale);
+    connect(m_resetScale, &QToolButton::clicked, this, [this] { m_engine->resetFaceTextureFields(1 | 2); });
+    m_texture->addRow(tr("Tile size"), tile, tr("Source units covered by one repeat of the texture"));
+  }
   m_texture->addRow(tr("Offset"), pair(m_offU, m_dotOffU, m_offV, m_dotOffV, 1.0, 2, QString()),
                     tr("Shift along the texture axes, in texels of the face's texture"));
   m_scaleU->setRange(0.01, 1e6);
@@ -458,32 +469,57 @@ void Inspector::buildTexture() {
   for (const auto &[dot, bit]: dots)
     connect(dot, &QToolButton::clicked, this, [this, bit] { m_engine->resetFaceTextureFields(bit); });
 
-  auto *tools = new QWidget(m_texture);
-  auto *g = new QGridLayout(tools);
-  g->setContentsMargins(0, 0, 0, 0);
-  g->setSpacing(3);
   struct Btn {
     const char *icon;
     QString text, tip;
     std::function<void()> fn;
   };
+  // The common operations: bigger, above the rest.
+  auto *primary = new QWidget(m_texture);
+  auto *pg = new QGridLayout(primary);
+  pg->setContentsMargins(0, 0, 0, 0);
+  pg->setSpacing(3);
+  const QList<QList<Btn>> primaryRows = {
+      {{"world", tr("World"), tr("Align to the world axes (paraxial)"), [this] { m_engine->alignFaceTextures(0); }},
+       {"facesel", tr("Face"), tr("Align to the face plane"), [this] { m_engine->alignFaceTextures(1); }},
+       {"fullscreen_enter", tr("Fit"), tr("Stretch one repeat across the face"), [this] { m_engine->fitFaceTextures(1, 1); }}},
+      {{"", tr("½×"), tr("Halve the tile size (more repeats)"), [this] { m_engine->scaleFaceTextures(0.5, 0.5); }},
+       {"", tr("2×"), tr("Double the tile size (fewer repeats)"), [this] { m_engine->scaleFaceTextures(2.0, 2.0); }}},
+  };
+  for (int r = 0; r < primaryRows.size(); ++r) {
+    const int span = 6 / int(primaryRows[r].size());
+    for (int c = 0; c < primaryRows[r].size(); ++c) {
+      const Btn &b = primaryRows[r][c];
+      auto *btn = smallButton(QString::fromLatin1(b.icon), b.tip, primary, b.text);
+      btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+      scale::bind(btn, [btn] { btn->setMinimumHeight(scale::px(30)); });
+      QFont f = btn->font();
+      f.setBold(true);
+      btn->setFont(f);
+      auto fn = b.fn;
+      connect(btn, &QToolButton::clicked, this, [fn] { fn(); });
+      pg->addWidget(btn, r, c * span, 1, span);
+    }
+  }
+  m_texture->addRow(QString(), primary);
+
+  auto *tools = new QWidget(m_texture);
+  auto *g = new QGridLayout(tools);
+  g->setContentsMargins(0, 0, 0, 0);
+  g->setSpacing(3);
   const QList<QList<Btn>> rows = {
       {{"loop_back", tr("−90°"), tr("Rotate texture 90° counter-clockwise"), [this] { m_engine->rotateFaceTextures(-90); }},
        {"loop_forwards", tr("+90°"), tr("Rotate texture 90° clockwise"), [this] { m_engine->rotateFaceTextures(90); }},
        {"arrow_leftright", tr("Flip U"), tr("Mirror horizontally"), [this] { m_engine->flipFaceTextures(true); }},
        {"mod_mirror", tr("Flip V"), tr("Mirror vertically"), [this] { m_engine->flipFaceTextures(false); }}},
-      {{"world", tr("World"), tr("Align to the world axes (paraxial)"), [this] { m_engine->alignFaceTextures(0); }},
-       {"facesel", tr("Face"), tr("Align to the face plane"), [this] { m_engine->alignFaceTextures(1); }},
-       {"fullscreen_enter", tr("Fit"), tr("Stretch one repeat across the face"), [this] { m_engine->fitFaceTextures(1, 1); }},
-       {"mod_array", tr("Fit U"), tr("Fit horizontally, keep vertical scale"), [this] { m_engine->fitFaceTextures(1, 0); }}},
-      {{"", tr("½×"), tr("Halve the tile size (more repeats)"), [this] { m_engine->scaleFaceTextures(0.5, 0.5); }},
-       {"", tr("2×"), tr("Double the tile size (fewer repeats)"), [this] { m_engine->scaleFaceTextures(2.0, 2.0); }},
+      {{"mod_array", tr("Fit U"), tr("Fit horizontally, keep vertical scale"), [this] { m_engine->fitFaceTextures(1, 0); }},
        {"", tr("← U"), tr("Shift by 1/8 tile"), [this] { m_engine->shiftFaceTextures(-0.125, 0); }},
-       {"", tr("U →"), tr("Shift by 1/8 tile"), [this] { m_engine->shiftFaceTextures(0.125, 0); }}},
+       {"", tr("U →"), tr("Shift by 1/8 tile"), [this] { m_engine->shiftFaceTextures(0.125, 0); }},
+       {"snap_edge", tr("Edge"), tr("Run the texture along a face edge (repeat to cycle edges)"),
+        [this] { m_engine->alignFaceTexturesToEdge(); }}},
       {{"", tr("↑ V"), tr("Shift up by 1/8 tile"), [this] { m_engine->shiftFaceTextures(0, -0.125); }},
        {"", tr("V ↓"), tr("Shift down by 1/8 tile"), [this] { m_engine->shiftFaceTextures(0, 0.125); }},
-       {"snap_edge", tr("Edge"), tr("Run the texture along a face edge (repeat to cycle edges)"),
-        [this] { m_engine->alignFaceTexturesToEdge(); }},
+       {"align_center", tr("Centre"), tr("Centre the texture on the face"), [this] { m_engine->justifyFaceTextures(4); }},
        {"loop_back", tr("Reset all"), tr("Every field back to its default: world-aligned, the texture's default "
                                           "scale, no offset, no rotation"),
         [this] { m_engine->resetFaceTextures(); }}},
@@ -491,8 +527,7 @@ void Inspector::buildTexture() {
        {"align_right", tr("Right"), tr("Justify right"), [this] { m_engine->justifyFaceTextures(1); }},
        {"align_top", tr("Top"), tr("Justify top"), [this] { m_engine->justifyFaceTextures(2); }},
        {"align_bottom", tr("Bottom"), tr("Justify bottom"), [this] { m_engine->justifyFaceTextures(3); }}},
-      {{"align_center", tr("Centre"), tr("Centre the texture on the face"), [this] { m_engine->justifyFaceTextures(4); }},
-       {"copydown", tr("Copy"), tr("Copy the face's material and mapping (Ctrl+Alt+C)"),
+      {{"copydown", tr("Copy"), tr("Copy the face's material and mapping (Ctrl+Alt+C)"),
         [this] { m_engine->copyFaceAttributes(); }},
        {"pastedown", tr("Paste"), tr("Paste material and mapping (Ctrl+Alt+V; Ctrl+click a face in Material mode)"),
         [this] { m_engine->pasteFaceAttributes(1); }},
@@ -535,6 +570,62 @@ void Inspector::buildTexture() {
   m_texPropsPanel = new MaterialPropsPanel(m_engine, MaterialPropsPanel::Mode::Selection, m_texProps);
   m_texProps->body()->addWidget(m_texPropsPanel);
   m_body->layout()->addWidget(m_texProps);
+}
+
+// Object mode, while a selection box is drawn: the material a new brush from it gets.
+void Inspector::buildNewBrush() {
+  m_newBrush = new Section(tr("New Brush"), QStringLiteral("cube"), m_body);
+  auto *row = new QWidget(m_newBrush);
+  auto *h = new QHBoxLayout(row);
+  h->setContentsMargins(0, 0, 0, 0);
+  m_newBrushThumb = new QLabel(row);
+  scale::bind(m_newBrushThumb, [this] { m_newBrushThumb->setFixedSize(scale::px(48), scale::px(48)); });
+  m_newBrushThumb->setStyleSheet(QStringLiteral("background:#2a3150; border-radius:4px;"));
+  m_newBrushThumb->setAlignment(Qt::AlignCenter);
+  m_newBrushName = new QLabel(row);
+  m_newBrushName->setWordWrap(true);
+  QSizePolicy policy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+  policy.setHeightForWidth(true);
+  m_newBrushName->setSizePolicy(policy);
+  m_newBrushName->setMinimumWidth(1);
+  m_newBrushReset = smallButton(QStringLiteral("loop_back"), tr("Back to the default brush material"), row, tr("Reset"));
+  connect(m_newBrushReset, &QToolButton::clicked, this,
+          [this] { m_engine->setCurrentMaterial(prefs::s("Brush/DefaultMaterial")); });
+  h->addWidget(m_newBrushThumb);
+  h->addWidget(m_newBrushName, 1);
+  h->addWidget(m_newBrushReset);
+  m_newBrush->addRow(QString(), row);
+  m_body->layout()->addWidget(m_newBrush);
+}
+
+void Inspector::refreshNewBrush() {
+  const QString def = prefs::s("Brush/DefaultMaterial");
+  QString name = m_engine->currentMaterial();
+  if (name.isEmpty())
+    name = def;
+  const bool isDefault = name.compare(def, Qt::CaseInsensitive) == 0;
+  m_newBrushName->setText(QStringLiteral("<b>%1</b>%2").arg(
+      breakable(name).toHtmlEscaped(),
+      isDefault ? QStringLiteral("<br><span style='color:#8a9ab8'>%1</span>").arg(tr("default")) : QString()));
+  m_newBrushReset->setEnabled(!isDefault);
+  if (name == m_newBrushThumbFor && !m_newBrushThumb->pixmap().isNull())
+    return;
+  m_newBrushThumbFor = name;
+  QPixmap pm;
+  QString path;
+  if (eng::isDevMaterial(name, def)) {
+    path = QStringLiteral(":/assets/measurewall01_Color.jpg");
+  } else if (const auto mat = vk::TextureManager::instance().find(name); mat && mat->hasEntry()) {
+    pm = ui::ThumbCache::instance().server(mat->entry.thumbFile());
+  }
+  if (pm.isNull() && path.isEmpty())
+    path = thumbPathFor(name);
+  if (pm.isNull() && !path.isEmpty())
+    pm = QPixmap::fromImage(QImageReader(path).read());
+  if (!pm.isNull())
+    pm = pm.scaled(m_newBrushThumb->size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+  m_newBrushThumb->setPixmap(pm);
+  m_newBrushThumb->setText(pm.isNull() ? QStringLiteral("?") : QString());
 }
 
 void Inspector::revealTextureProperties(const QString &ref) {
@@ -759,7 +850,8 @@ void Inspector::refresh() {
   // The arch tool works on the selection box: it takes the panel over while open.
   // Edit Source / Material-mode output pick: Modifiers is shown with nothing selected.
   const quint32 panelHost = nothingSelected ? m_engine->panelModHost() : 0;
-  const bool nothing = nothingSelected && !archTool && !shapeTool && !panelHost;
+  const bool newBrush = !m_engine->materialMode() && m_engine->hasMarquee();
+  const bool nothing = nothingSelected && !archTool && !shapeTool && !panelHost && !newBrush;
   const bool world = m_engine->worldEnvSelected();
 
   QString icon = QStringLiteral("world");
@@ -771,6 +863,9 @@ void Inspector::refresh() {
     m_shapePanel->refresh();
     icon = m_shapePanel->icon();
     title = m_shapePanel->title();
+  } else if (newBrush && nothingSelected) {
+    icon = QStringLiteral("cube");
+    title = tr("Selection box");
   } else if (nothing) {
     title = tr("Nothing selected");
     subtitle = QString();
@@ -839,7 +934,12 @@ void Inspector::refresh() {
   const bool matMode = m_engine->materialMode();
   m_transform->setVisible(!matMode && !nothingSelected && !world && !(ents == 1 && objects == 0 && faces == 0)
                           && (objects > 0 || hosts > 0 || ents > 0));
-  m_texture->setVisible(matMode && faces > 0);
+  // Object mode: the selected brushes' faces (selectedFaceRefs falls back to every face of them).
+  const bool positioning = (matMode && faces > 0) || (!matMode && objects > 0);
+  m_texture->setVisible(positioning);
+  m_newBrush->setVisible(newBrush);
+  if (newBrush)
+    refreshNewBrush();
   m_texProps->setVisible(matMode && faces > 0);
   m_stairsTex->setVisible(matMode && faces > 0 && m_stairsTexPanel->refresh());
   const quint32 proc = m_engine->materialMode() ? 0 : m_engine->selectedProcObject();
@@ -900,7 +1000,7 @@ void Inspector::refresh() {
 
   if (!nothingSelected && !matMode)
     refreshTransform();
-  if (matMode && faces > 0)
+  if (positioning)
     refreshTexture();
   if (world)
     refreshWorld();
@@ -993,6 +1093,7 @@ void Inspector::refreshTexture() {
     m_rot->setValueQuiet(s.rotation, s.mixedRotation);
   m_dotScaleU->setChanged(s.changedScaleU, tr("Not the texture's default tile size"));
   m_dotScaleV->setChanged(s.changedScaleV, tr("Not the texture's default tile size"));
+  m_resetScale->setEnabled(s.changedScaleU || s.changedScaleV);
   m_dotOffU->setChanged(s.changedOffsetU, tr("Offset"));
   m_dotOffV->setChanged(s.changedOffsetV, tr("Offset"));
   m_dotRot->setChanged(s.changedRotation, tr("Rotated"));

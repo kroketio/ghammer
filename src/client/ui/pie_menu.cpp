@@ -32,11 +32,11 @@ const Slot kObjectSlots[] = {
 };
 const Slot kMaterialSlots[] = {
     {7, "autosel.ceiling", QT_TRANSLATE_NOOP("ui::PieMenu", "Ceilings"), false},
-    {8, "tex.quickMaterial", QT_TRANSLATE_NOOP("ui::PieMenu", "Quick Material"), true},
+    {8, "autosel.group", QT_TRANSLATE_NOOP("ui::PieMenu", "Group"), false},
     {9, "autosel.sameMirror", QT_TRANSLATE_NOOP("ui::PieMenu", "Same Mirror"), false},
     {4, "autosel.sameBrush", QT_TRANSLATE_NOOP("ui::PieMenu", "Same Brush"), false},
     {6, "autosel.sameMaterial", QT_TRANSLATE_NOOP("ui::PieMenu", "Same Material"), false},
-    {3, "autosel.group", QT_TRANSLATE_NOOP("ui::PieMenu", "Group"), false},
+    {3, "tex.quickMaterial", QT_TRANSLATE_NOOP("ui::PieMenu", "Quick Material"), true},
     {2, "select.toObjectMode", QT_TRANSLATE_NOOP("ui::PieMenu", "Select in Object Mode"), true},
 };
 const Slot kEditSlots[] = {
