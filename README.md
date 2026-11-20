@@ -78,10 +78,11 @@ For distro maintainers; CMake's fetch_content is not used, and use `-DUSE_VENDOR
 
 The workflow is the following:
 
-1. Open ghammer, create a new project, this creates `~/GodotProjects/<project>/`, this creates:
-    1. `~/GodotProjects/<project>/levels/`
-    2. `~/GodotProjects/<project>/game/` - Godot Forward+ project (automatically generated)
-    3. Already have an existing project? replace the `game` folder. ghammer will not modify/destroy it. ghammer only exports to specific paths within your godot project.
+1. Open ghammer, create a new project, this creates:
+    1. `~/GodotProjects/<project>/` 
+    2. `~/GodotProjects/<project>/levels/`
+    3. `~/GodotProjects/<project>/game/` - Godot Forward+ project (automatically generated)
+    4. Already have an existing project? replace the `game` folder. ghammer will not modify/destroy it. ghammer only exports to specific paths within your godot project.
 2. Upon `.ghmap` save, the Godot project is automatically updated. Specifically, the `.tscn` file of that level will be created or updated, as well as associated `.gltf` of that level (geometry), and materials are exported.
     1. e.g. `game/textures/blenderkit_1k/Box128428_1K_ARM.png`, `box128428.tres`, etc.
 3. Godot notices that files were updated, so it reloads scene(s), and resources.
@@ -151,7 +152,7 @@ It will use `~/.config/ghammer/` as data path.
 ## Contributing
 
 Large, AI generated merge requests are annoying to review, however if the 
-addition follows existing UI/UX paradigms, is stable/robust, and is useful, we will merge it.
+addition follow existing UI/UX paradigms, is stable/robust, and is useful, we will merge it.
 
 # License
 
