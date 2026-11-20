@@ -436,6 +436,11 @@ Engine3D::Engine3D(QObject *parent, const Role role) :
       m_hasLastSelection = true;
     }
   });
+  // Cut mode works on the selection: nothing selected ends it.
+  connect(this, &Engine3D::selectionChanged, this, [this] {
+    if (m_cutMode != CutMode::Off && m_selectedObjects.empty())
+      exitCutMode();
+  });
   // Zen mode always lets the selection through, so a selection change can change what it shows.
   connect(this, &Engine3D::selectionChanged, this, [this] {
     if (m_zenOn) {
@@ -5017,6 +5022,8 @@ void Engine3D::noteCutOriginPlane(const int plane) {
 }
 
 QString Engine3D::cutModeLabel() const {
+  if (m_cutMode == CutMode::Off)
+    return QString();
   if (isCutout())
     return QStringLiteral("cut \u00b7 %1").arg(cutShapeLabel());
   switch (m_cutMode) {
@@ -6214,12 +6221,18 @@ bool Engine3D::applyCutout() {
     if (!obj)
       continue;
 
+    // Boxes keep their faces; other convex brushes (bevelled corners and such) are clipped into the strips.
     std::array<int, 6> faceSlots {};
-    if (!isBoxBrush(obj, faceSlots)) {
-      qDebug().noquote() << QStringLiteral("[cut] skipped %1: not axis aligned").arg(id);
-      ++refused;
-      survivors.push_back(id);
-      continue;
+    const bool box = isBoxBrush(obj, faceSlots);
+    std::optional<eng::ConvexBrush> convex;
+    if (!box) {
+      convex = eng::ConvexBrush::fromObject(*obj);
+      if (!convex) {
+        qDebug().noquote() << QStringLiteral("[cut] skipped %1: not a convex solid").arg(id);
+        ++refused;
+        survivors.push_back(id);
+        continue;
+      }
     }
 
     const auto [loF, hiF] = obj->getWorldAABB();
@@ -6250,13 +6263,34 @@ bool Engine3D::applyCutout() {
     const auto strip = [&](const double s0, const double s1, const double t0, const double t1) {
       if (s1 <= s0 || t1 <= t0)
         return;
-      glm::vec3 mn(lo);
-      glm::vec3 mx(hi);
-      mn[axisA] = float(s0);
-      mx[axisA] = float(s1);
-      mn[axisB] = float(t0);
-      mx[axisB] = float(t1);
-      const auto piece = buildCutPiece(obj, faceSlots, mn, mx);
+      std::shared_ptr<eng::GameObject> piece;
+      if (box) {
+        glm::vec3 mn(lo);
+        glm::vec3 mx(hi);
+        mn[axisA] = float(s0);
+        mx[axisA] = float(s1);
+        mn[axisB] = float(t0);
+        mx[axisB] = float(t1);
+        piece = buildCutPiece(obj, faceSlots, mn, mx);
+      } else {
+        std::optional<eng::ConvexBrush> part = convex;
+        const auto keep = [&part](const int axis, const double at, const bool above) {
+          if (!part)
+            return;
+          glm::dvec3 n(0.0);
+          n[axis] = 1.0;
+          std::optional<eng::ConvexBrush> front, back;
+          part->split(n, at, front, back);
+          part = above ? front : back;
+        };
+        keep(axisA, s0, true);
+        keep(axisA, s1, false);
+        keep(axisB, t0, true);
+        keep(axisB, t1, false);
+        if (!part || !part->valid())
+          return;
+        piece = objectFromBrush(*part, obj.get());
+      }
       if (!piece) {
         qWarning().noquote() << QStringLiteral("[cut] cut-out piece build failed for %1").arg(id);
         return;
@@ -6349,9 +6383,13 @@ bool Engine3D::applyCut() {
     const glm::dvec3 p = vb.right * m_cutLine.a.x + vb.up * m_cutLine.a.y;
     const int keep = m_cutMode == CutMode::KeepBoth ? 2 : (m_cutMode == CutMode::Positive ? 0 : 1);
     const int pieces = clipSelection(glm::vec3(n), float(glm::dot(n, p)), keep);
+    if (pieces > 0) {
+      exitCutMode();
+      return true;
+    }
     m_cutLine = {};
     emit cutLineChanged();
-    return pieces > 0;
+    return false;
   }
 
   const ViewBasis bs = viewBasisFor(m_cutLine.plane);
