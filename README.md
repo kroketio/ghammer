@@ -21,6 +21,7 @@ Works with vanilla Godot - no addons required.
   - Source-like I/O system that outputs to gdscript
   - physics engine
   - Open multiple levels
+  - LUT editor
   - Integration with external applications
   - Layout designer - quickly make corridors, and rooms
 - Launch Godot from the level editor
