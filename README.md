@@ -25,19 +25,19 @@ Works with vanilla Godot - no addons required.
   - Layout designer - quickly make corridors, and rooms
 - Launch Godot from the level editor
 
-#### NDK
+#### Brutalist!
 
 ![tools/screenshot4.jpg](tools/screenshot4.jpg)
 
 ## When to use gHammer
 
 1. You want to quickly prototype, and iterate on 3D environments.
-2. You know what a brush-based level editor is, the limitations, and are not satisfied with the workflow of trenchbroom, radiant, GodotVMF, etc.
-3. You want an open-source level editor that works well on Linux.
+2. You want an open-source level editor that works well on Linux.
+3. You know what a brush-based level editor is, the limitations, and are not satisfied with the workflow of trenchbroom, radiant, GodotVMF, etc.
 4. You understand the paradigm behind Source-like I/O systems, and its benefits/drawbacks compared to gdscript or UE blueprints.
 5. You understand the benefits of client/server architecture, and how that could be useful in a team of developers.
 6. You understand the benefit of IntelliJ-style project management.
-7. You like C++/Qt applications that compile easily, and use QtWidgets for accessibility.
+7. You like C++/Qt applications that are easy to compile, and use QtWidgets for accessibility.
 8. You understand that this level editor was made to satisfy our requirements, which may differ from yours.
 9. You understand this level editor is still in alpha, and some features are missing.
 
