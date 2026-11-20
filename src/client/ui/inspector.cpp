@@ -479,6 +479,7 @@ void Inspector::buildTexture() {
   auto *pg = new QGridLayout(primary);
   pg->setContentsMargins(0, 0, 0, 0);
   pg->setSpacing(3);
+  std::vector<QToolButton *> primaryButtons;
   const QList<QList<Btn>> primaryRows = {
       {{"world", tr("World"), tr("Align to the world axes (paraxial)"), [this] { m_engine->alignFaceTextures(0); }},
        {"facesel", tr("Face"), tr("Align to the face plane"), [this] { m_engine->alignFaceTextures(1); }},
@@ -492,7 +493,7 @@ void Inspector::buildTexture() {
       const Btn &b = primaryRows[r][c];
       auto *btn = smallButton(QString::fromLatin1(b.icon), b.tip, primary, b.text);
       btn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-      scale::bind(btn, [btn] { btn->setMinimumHeight(scale::px(30)); });
+      primaryButtons.push_back(btn);
       QFont f = btn->font();
       f.setBold(true);
       btn->setFont(f);
@@ -543,6 +544,13 @@ void Inspector::buildTexture() {
       connect(btn, &QToolButton::clicked, this, [fn] { fn(); });
       g->addWidget(btn, r, c);
     }
+  // Each primary button is two ordinary rows high.
+  if (auto *ref = qobject_cast<QToolButton *>(g->itemAtPosition(0, 0)->widget()))
+    scale::bind(tools, [ref, primaryButtons, g] {
+      const int h = 2 * ref->sizeHint().height() + g->spacing();
+      for (QToolButton *b: primaryButtons)
+        b->setFixedHeight(h);
+    });
   m_texture->addRow(QString(), tools);
 
   auto *locks = new QWidget(m_texture);
